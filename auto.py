@@ -124,7 +124,9 @@ def hadoopf(op1,ip,key,un):
 
 
 prPurple("""Welcome to python automation
-        1. HADOOP""")
+        1. HADOOP
+        2. DOCKER
+        3. AWS""")
 op=input("enter ur options: ")
 if op=="1":
     ip=input("enter ip address: ")

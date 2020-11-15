@@ -4,6 +4,7 @@ import json
 import os
 import getpass
 import time
+import docker
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) 
 def prGreen(skk): print("\033[92m {}\033[00m" .format(skk)) 
@@ -16,17 +17,37 @@ def prBlack(skk): print("\033[98m {}\033[00m" .format(skk))
 
 def hadoopf(op1,ip,key,un):
     ssh = "ssh -l {0} {1} -i {2} sudo ".format(un,ip,key)
+    st1 = 0
+    st2 = 0
+    st3 = 0
+    st4 = 0
+    st5 = 0
     while(op1!="7"):
         if op1=="0":
             prCyan("""\nWhat you want to do in hadoop
-[To enter multiple option seprate it with ","]\n
-        1. Install hadoop software\n
-        2. Configure named node\n
-        3. Configure data node\n
-        4. Start named node\n
-        5. Start data node\n
-        6. Check dfsadmin report\n
-        7. Exit hadoop menu\n""")
+[To enter multiple option seprate it with ","]\n""")
+            if st1==1:
+                prYellow("        1. Install hadoop software.✅\n")
+            else:
+                prCyan("        1. Install hadoop software.\n")
+            if st2==1:
+                prYellow("        2. Configure named node.✅\n")
+            else:
+                prCyan("        2. Configure named node.\n")
+            if st3==1:
+                prYellow("        3. Configure data node.✅\n")
+            else:
+                prCyan("        3. Configure data node.\n")
+            if st4==1:
+                prYellow("        4. Start named node.✅\n")
+            else:
+                prCyan("        4. Start named node.\n")
+            if st5==1:
+                prYellow("        5. Start data node.✅\n")
+            else:
+                prCyan("        5. Start data node.\n")
+            prCyan("""        6. Check Hadoop report.\n
+        7. Exit hadoop menu.""")
             op1=input("enter ur option: ")
         if op1=="7":
             prLightGray("Quiting HADOOP MENU....")
@@ -35,34 +56,39 @@ def hadoopf(op1,ip,key,un):
                 output = sp.getstatusoutput(ssh+"hadoop version")
                 if (output[0]!=0) and not("1" in op1):
                     prRed(">>>>>>>Hadoop is not installed in this OS<<<<<<<<")
+                    st=0
                     op1="0"
                 elif (output[0]==0) and ("1" in op1):
                     prYellow(">>>>>>>HADOOP IS ALREADY INSTALLED<<<<<<<")
-                    op1="0"
-            if "1" in op1:
+                    st1=1
+            if ("1" in op1) and (st1!=1):
                 prLightPurple(">>>>>>>>INSTALLING HADOOP PLEASE WAIT.....")
                 output = sp.getstatusoutput(ssh+"yum install wget -y")
                 output = sp.getstatusoutput(ssh+"wget http://35.244.242.82/yum/java/el7/x86_64/jdk-8u171-linux-x64.rpm")
-                output = sp.getstatusoutput(ssh+"rpm -i jdk-8u171-linux-x64.rpm")
-                print(output)
+                output = sp.getstatusoutput(ssh+"rpm -i -v jdk-8u171-linux-x64.rpm")
+                print(output[1])
                 output = sp.getstatusoutput(ssh+"wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm")
-                output = sp.getstatusoutput(ssh+"rpm -i hadoop-1.2.1-1.x86_64.rpm --force")
-                print(output)
+                output = sp.getstatusoutput(ssh+"rpm -i -v hadoop-1.2.1-1.x86_64.rpm --force")
+                print(output[1])
                 output = sp.getstatusoutput(ssh+"echo 3 > /proc/sys/vm/drop-caches")
                 prGreen(">>>>>>>>>HADOOP SOFTWARE IS SUCESSFULLY INSTALLED<<<<<<<<<<<<<")
-            if ("2" in op1)or("3" in op1)or("4" in op1)or("5" in op1)or("6" in op1):
-                output = sp.getstatusoutput(ssh+"hadoop version")
-                if output[0]!=0:
-                    prRed(">>>>>>>Hadoop is not installed in this OS<<<<<<<<")
-                    op1="0"
+                st1=1
+
             if ("2" in op1)or("3" in op1)or("4" in op1)or("5" in op1):
                 output = sp.getstatusoutput(ssh+"jps")
+                print(output[1])
                 if "NameNode" in output[1]:
-                    prYellow(">>>>>>>>>>Namenode is already running....<<<<<<")
-                    op1="0"
+                    output = sp.getstatusoutput(ssh+"hadoop dfsadmin -report")
+                    if output[1]!=0:
+                        prYellow(">>>>>>>>>>Namenode is already running....<<<<<<")
+                        op1="0"
+                        st4=1
+                        st2=1
                 if "DataNode" in output[1]:
                     prYellow(">>>>>>>>>>Datanode is already running....<<<<<<")
                     op1="0"
+                    st5=1
+                    st3=1
             if ("2" in op1) and not("3" in op1):
                 prLightPurple(">>>>>>>>>Coniguring named node.....")
                 output = sp.getstatusoutput(ssh+"mkdir /nn")
@@ -70,10 +96,11 @@ def hadoopf(op1,ip,key,un):
                 output = sp.getstatusoutput(ssh+"cp hdfs-site.xml /etc/hadoop/hdfs-site.xml")
                 output = sp.getstatusoutput("scp -i {0} hadoopfiles/name-core.xml {1}@{2}:/home/{1}/core-site.xml".format(key,un,ip))
                 output = sp.getstatusoutput(ssh+"cp core-site.xml /etc/hadoop/core-site.xml")
-                op2 = input("hdfs-site and core-file configured sucesfully with /nn as named node directory do you want to format /nn. y/n?")
+                op2 = input("Name node configured sucesfully with /nn as named node directory do you want to format /nn. y/n?")
                 if op2=="y":
                     output = sp.getstatusoutput(ssh+"hadoop namenode -format -force")
                 prGreen(">>>>>>>>NAMED NODE IS NOW CONFIGURED READY TO START<<<<<<<<")
+                st2=1
             if ("3" in op1) and not("2" in op1):
                 prLightPurple(">>>>>>>>Coniguring data node.....")
                 output = sp.getstatusoutput(ssh+"mkdir /dn")
@@ -98,6 +125,7 @@ def hadoopf(op1,ip,key,un):
                 output = sp.getstatusoutput("scp -i {0} hadoopfiles/data-core.xml {1}@{2}:/home/{1}/core-site.xml".format(key,un,ip))
                 output = sp.getstatusoutput(ssh+"cp core-site.xml /etc/hadoop/core-site.xml")
                 prGreen(">>>>>>>>>>HADOOP DATA NODE IS CONFIGURED AND READY TO START<<<<<<<<<<")
+                st3=1
             if ("4" in op1) and not("5" in op1):
                 prLightPurple(">>>>>>>STARTING NAME NODE.....")
                 output = sp.getstatusoutput(ssh+"hadoop-daemon.sh start namenode")
@@ -105,6 +133,7 @@ def hadoopf(op1,ip,key,un):
                     output = sp.getstatusoutput(ssh+"jps")
                     if "NameNode" in output[1]:
                         prGreen(">>>>>>>>NAME NODE IS SUCESSFULLY STARTED<<<<<<<<<")
+                        st4=1
                     else:
                         prRed(">>>>>>>>NAME NODE COULD NOT START<<<<<<<<")
                 else:
@@ -116,6 +145,7 @@ def hadoopf(op1,ip,key,un):
                     output = sp.getstatusoutput(ssh+"jps")
                     if "DataNode" in output[1]:
                         prGreen(">>>>>>>>DATA NODE IS SUCESSFULLY STARTED<<<<<<<<<")
+                        st5=1
                     else:
                         prRed(">>>>>>>>DATA NODE COULD NOT START<<<<<<<<")
                 else:
@@ -131,17 +161,12 @@ def awsf():
     prCyan("""What you want to do in AWS?
 [To enter multiple option seprate it with ","]
 
-        1. Create keypair.\n
-        2. Create Security group\n
-        3. Launch an EC2 instance.\n
-        4. Create EBS volume.\n
-        5. Attach EBS volume to EC2 instance.\n
-        6. Install webserver on EC2 instance.\n
-        7. Create Partition and mount it.\n
-        8. Create S3 bucket\n
-        9. Upload files in S3 bucket\n
-        10. Reset this MENU\n
-        11. EXIT AWS MENU\n""")
+        1. Create keypair.                    6. Install webserver on EC2 instance.\n                     
+        2. Create Security group.             7. Create Partition and mount it.\n
+        3. Launch an EC2 instance.            8. Create S3 bucket\n
+        4. Create EBS volume.                 9. Upload files in S3 bucket\n
+        5. Attach EBS volume to EC2 instance. 10. Reset this MENU\n
+                            11. EXIT AWS MENU\n""")
 
     op1 = input("Enter your option: ")
     kn = None
@@ -398,7 +423,7 @@ def awsf():
                     ec2_key = input(" Enter the KeyPair file with path: ")
                 else:
                     prLightPurple(">>>>>> Checking connection with {} Please Wait<<<<<<<<<<".format(ec2_pubip))
-                    time.sleep(10)
+                    time.sleep(24)
                     output =  sp.getstatusoutput("ping {} -c 5".format(ec2_pubip))
                 nd = linuxf("1",ec2_pubip,"ec2-user","awsfiles/{0}.pem".format(ec2_key))
             if "7" in op1:
@@ -406,10 +431,39 @@ def awsf():
                 if ec2_id==None:
                     ec2_pubip = input("\n    Enter the ip address: ")
                     ec2_key = input("    Enter the KeyPair file with path: ")
+                else:
+                    prLightPurple(">>>>>> Please wait for the connection with {} <<<<<<<<<<".format(ec2_pubip))
+                    time.sleep(30)
                 part = linuxf("6",ec2_pubip,"ec2-user","awsfiles/{0}.pem".format(ec2_key))
                 if nd == None:
-                    nd = input("\n    Enter the folder to mount with path: ")
-                linuxf("7",ec2_pubip,"ec2-user","awsfiles/{0}.pem".format(ec2_key),nd,part)
+                    linuxf("7",ec2_pubip,"ec2-user","awsfiles/{0}.pem".format(ec2_key),None,part)
+                else:
+                    linuxf("7",ec2_pubip,"ec2-user","awsfiles/{0}.pem".format(ec2_key),nd,part)
+            
+            if "8" in op1:
+                prLightPurple("\n*************** Create AWS S3 bucket ********************\n")
+                buc_name = input("    Enter  bucket name(it should be unique): ")
+                buc_reg = input("    Enter bucket region[Ex. 'ap-south-1': ")
+                output =  sp.getstatusoutput("aws s3api create-bucket --bucket {0} --region {1} --create-bucket-configuration LocationConstraint={1}".format(buc_name,buc_reg))
+                if output[0]==0:
+                    prGreen(">>>>>>>>>>>>>>>>>>>>>>> S3 Bucket created sucessfully <<<<<<<<<<<<<<<")
+                    prGreen(output[1])
+                else:
+                    prRed(">>>>>>>>>>>>>>> Failed to create S3 bucket try again with other name <<<<<<<<<<<<<<")
+                    prRed(output[1])
+            if "9" in op1:
+                prLightPurple("\n*************** Upload files to S3 bucket ********************\n")
+                if not("8" in op1):
+                    buc_name = input("    Enter your bucket name: ")
+                s3_file = input("    Enter your file name with path: ")
+                output =  sp.getstatusoutput('aws s3 cp {0} s3://{1}/ --acl "public-read"'.format(s3_file,buc_name))
+                if output[0]==0:
+                    prGreen(">>>>>>>>>>>>>>>>>>>>>>> File uploaded sucessfully in S3 Bucket <<<<<<<<<<<<<<<")
+                    prGreen(output[1])
+                else:
+                    prRed(">>>>>>>>>>>>>>> Failed to upload file in S3 Bucket <<<<<<<<<<<<<<<")
+                    prRed(output[1])
+
 
             op1="0"
 
@@ -434,26 +488,17 @@ def linuxf(op1="0",ip_ad=None,un=None,ky=None,nd=None,part=None):
     else:
          prYellow("      Your key file is "+ky)
     ssh = "ssh -l {0} {1} -i {2} sudo ".format(un,ip_ad,ky)
-    st1=0
     while(op1!="10"):
         if op1=="0":
             exclusive = 0
             op8 = "0"
             prCyan("""What you want to do in AWS?
-[To enter multiple option seprate it with ","]\n""")
-            if st1==1:
-                prYellow("       1. WebServer is configured.✅\n")
-            else:
-                prCyan("       1. WebServer Configuration.\n")
-            prCyan("""       2. Start any service.\n
-        3. Stop any service.\n
-        4. SCP file transfer. \n
-        5. Create an USER. \n
-        6. Create STATIC partition and Format it.\n 
-        7. Mount Directory to a partition.\n
-        8. LVM dynamic partition.\n
-        9. SSH Remote Login .\n
-       10. EXIT This MENU\n""")
+[To enter multiple option seprate it with ","]\n
+        1. WebServer Configuration.       6. Create STATIC partition and Format it.\n
+        2. Start any service.             7. Mount Directory to a partition.\n
+        3. Stop any service.              8. LVM dynamic partition.\n
+        4. SCP file transfer.             9. SSH Remote Login .\n
+        5. Create an USER.               10. EXIT This MENU\n""")
             op1 = input("Enter your option: ")
         if op1=="10":
             prLightGray("QUITING LINUX AUTOMATION MENU............")
@@ -645,8 +690,8 @@ def linuxf(op1="0",ip_ad=None,un=None,ky=None,nd=None,part=None):
             if "9" in op1:
                 os.system(ssh[:-6])
             
-                            
-            op1="0"
+            if op1!="10":
+                op1="0"
 
 
 
@@ -666,26 +711,55 @@ while(op!="5"):
     ▒█░░░ ░░▒█░░ ░▒█░░ ▒█░▒█ ▒█▄▄▄█ ▒█░░▀█ 　 ▒█░▒█ ░▀▄▄▀ ░▒█░░ ▒█▄▄▄█ ▒█░░▒█ ▒█░▒█ ░▒█░░ ▄█▄ ▒█▄▄▄█ ▒█░░▀█\n\n""")
     prYellow("🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟")
     prPurple("""
-        1. HADOOP                2. DOCKER             3. AWS              4. LINUX              5. EXIT
+        1. HADOOP                2. DOCKER                  3. AWS              4. LINUX                     5. EXIT
 
-           → Install hadoop                               → Key Pair          → WEB SERVER
-           → Name Node                                    → Security Grp      → LVM PARTITION
-           → Data Node                                    → EC2 Instance      → FORMAT AND MOUNT
-           → Hadoop Report                                → EBS Volume        → CREATE/REMOVE FILE/DIRECTORY
+           → Install hadoop         → Install Docker           → Key Pair          → Webserver
+           → Name Node              → Launch Container         → Security Grp      → Start/Stop service
+           → Data Node              → Start/stop Container     → EC2 Instance      → Static Partition
+           → Hadoop Report          → Docker Images            → EBS Volume        → Dynamic Partition [LVM]
+           → Start/stop Nodes       → Attach to container      → AWS S3            → SCP file transfer & SSH Login
 
         Enter your options:""")
     op=input()
     if op=="1":
         os.system("clear")
-        prCyan("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> HADOOP CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+        prYellow("======================================================================")
+        prCyan("""            _    _           _                   
+            | |  | |         | |                  
+            | |__| | __ _  __| | ___   ___  _ __  
+            |  __  |/ _` |/ _` |/ _ \ / _ \| '_ \ 
+            | |  | | (_| | (_| | (_) | (_) | |_) |
+            |_|  |_|\__,_|\__,_|\___/ \___/| .__/ 
+                                           | |    
+                                           |_|   """)
+        prYellow("======================================================================")
+        prCyan("\n>>>>>>>>>>>>>>>>>>>>>>>> HADOOP CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<\n")
         ip=input("Enter the  ip address of the node: ")
         key=input("Enter key path with name [Ex. /home/key.pem]: ")
         un=input("Enter the user name: ")
         hadoopf("0",ip,key,un)
+    elif op=="2":
+        docker.docker()
     elif op=="3":
         os.system("clear")
+        prCyan("=============================================================================")
+        prYellow("""                                    __          _______ 
+                                    /\ \        / / ____|
+                                   /  \ \  /\  / / (___  
+                                  / /\ \ \/  \/ / \___ \ 
+                                 / ____ \  /\  /  ____) |
+                                /_/    \_\/  \/  |_____/ \n""")
+        prCyan("==============================================================================")
+
         prCyan("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> AWS MENU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
         awsf()
     elif op=="4":
         os.system("clear")
+        prYellow("======================================================================================")
+        prCyan("""    _     _                      _         _                        _   _             
+    | |   (_)_ __  _   ___  __   / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  
+    | |   | | '_ \| | | \ \/ /  / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \ 
+    | |___| | | | | |_| |>  <  / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |
+    |_____|_|_| |_|\__,_/_/\_\/_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|\n""")
+        prYellow("======================================================================================")
         linuxf()

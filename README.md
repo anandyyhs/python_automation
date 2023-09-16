@@ -33,17 +33,12 @@ This is a Python script for remote Linux system administration using SSH. The to
 2. Ensure you have Python 3.x installed on your local machine.
 
 3. Navigate to the repository directory:
-
-  ```shell
-  cd remote-linux-automation
-
-
-4. Run the script:
-
-  ```shell
-  python linux_automation.py
-
-5. Follow the on-screen menu to choose the desired Linux administration task.
+   ```shell
+   cd remote-linux-automation
+5. Run the script:
+   ```shell
+   python linux_automation.py
+6. Follow the on-screen menu to choose the desired Linux administration task.
 
 Dependencies
 Python 3.x

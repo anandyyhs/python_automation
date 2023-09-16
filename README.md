@@ -1,27 +1,17 @@
 # python_automation
 ARTH TEAM TASK -1
 
-# Remote Linux Automation Tool
+# Python Linux Automation Tool
 
 This is a Python script for remote Linux system administration using SSH. The tool provides a menu-driven interface for performing various tasks on a remote Linux machine. It is designed to simplify common administration tasks such as web server configuration, service management, file transfer, user management, partition operations, logical volume management (LVM), and more.
 
 ## Features
 
-- **Web Server Configuration**: Install and configure the Apache HTTP server (httpd) and download HTML files.
+- **HADOOP**: Installing Hadoop, configuring name node & data node, starting name node & data node and checking hadoop dfs-admin report.
+- **DOCKER**: Installing docker, Downloading docker images, launching docker container, start/stop container, attach to container and check all containers and available images.
+- **AWS**: Creating Keypair and security group, Launching EC2 instance, Creating EBS, AWS S3 bucket, upload files in S3 bucket.
+- **LINUX**: Configure webserver, SCP file transfer, Start/Stop services, Create user, Static partition and format, LVM Dynamic partition.
 
-- **Service Management**: Start and stop services on the remote machine.
-
-- **SCP File Transfer**: Securely transfer files between the local and remote machines using SCP.
-
-- **User Management**: Create new users on the remote machine.
-
-- **Static Partition Operations**: Create and format static partitions.
-
-- **Mounting**: Mount directories to partitions.
-
-- **Logical Volume Management (LVM)**: Perform LVM operations, including creating physical volumes, volume groups, and logical volumes.
-
-- **SSH Remote Login**: Initiate an SSH session to the remote machine.
 
 ## Usage
 
